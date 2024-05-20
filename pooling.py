@@ -9,9 +9,10 @@ class learnable_gaussian(nn.Module):
     '''
     I can weight something by a gaussian and let the network learn how wide the gaussian should be
     '''
-    def __init__(self, center, var = 128):
+    def __init__(self, center, var = 128, amp = 0.01):
         super().__init__()
-        self.var = nn.Parameter(data =  torch.Tensor([var]))
+        self.amp = nn.Parameter(data = torch.Tensor([amp]))
+        self.var = nn.Parameter(data = torch.Tensor([var]))
         self.center = center
 
         self.device = torch.device('cpu')
@@ -19,7 +20,7 @@ class learnable_gaussian(nn.Module):
         self.to(self.device)
 
     def forward(self, x):
-        return torch.exp(-(x - self.center)**2/(2 * self.var))
+        return self.amp * torch.exp(-(x - self.center)**2/(2 * self.var))
 
 class SwiGLU(nn.Module):
     '''
@@ -86,7 +87,7 @@ class my_pooling(nn.Module):
         self.gaussian_256 = learnable_gaussian(256)
         self.gaussian_128 = learnable_gaussian(128)
 
-        self.unconventional_pooling_weight = nn.Parameter(data =  torch.Tensor([0.01]))
+        #self.unconventional_pooling_weight = nn.Parameter(data =  torch.Tensor([0.01]))
 
         self.device = torch.device('cpu')
         if torch.cuda.is_available(): self.device = torch.device('cuda')
@@ -134,7 +135,8 @@ class my_pooling(nn.Module):
             self.ffn_256(fnn_256_embeddings) * self.gaussian_256(embed_length)[:, None, None] + 
             self.ffn_128(fnn_128_embeddings) * self.gaussian_128(embed_length)[:, None, None])
 
-        output_mod = (sum_unconv_embed * self.unconventional_pooling_weight).squeeze() 
+        #output_mod = (sum_unconv_embed * self.unconventional_pooling_weight).squeeze()
+        output_mod = (sum_unconv_embed).squeeze() 
         output = F.normalize(mean_embeddings + output_mod, p=2, dim=1)
 
         features.update({"sentence_embedding": output})
