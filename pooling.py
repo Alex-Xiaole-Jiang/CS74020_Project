@@ -61,7 +61,7 @@ class SwiGLUNetwork(nn.Module):
 
         # Add subsequent layers
         for i in range(len(depth_dim) - 1):
-            self.layers.append(SwiGLU(depth_dim[i], depth_dim[i+1], depth_dim[i+1]))
+            self.layers.append(SwiGLU(depth_dim[i], depth_dim[i+1], depth_dim[i+1], use_layernorm=use_layernorm))
         self.layers.append(SwiGLU(mid_dim, mid_dim, 1, use_layernorm = False))
 
         self.device = torch.device('cpu')
@@ -75,12 +75,13 @@ class SwiGLUNetwork(nn.Module):
 
 
 class my_pooling(nn.Module):
-    def __init__(self):
+    def __init__(self, use_layernorm = True):
         super().__init__()
-        self.ffn_512 = SwiGLUNetwork(512)
-        self.ffn_384 = SwiGLUNetwork(384)
-        self.ffn_256 = SwiGLUNetwork(256)
-        self.ffn_128 = SwiGLUNetwork(128)
+        self.use_layernorm = use_layernorm
+        self.ffn_512 = SwiGLUNetwork(512, use_layernorm=self.use_layernorm)
+        self.ffn_384 = SwiGLUNetwork(384, use_layernorm=self.use_layernorm)
+        self.ffn_256 = SwiGLUNetwork(256, use_layernorm=self.use_layernorm)
+        self.ffn_128 = SwiGLUNetwork(128, use_layernorm=self.use_layernorm)
         
         self.gaussian_512 = learnable_gaussian(512)
         self.gaussian_384 = learnable_gaussian(384)
@@ -147,9 +148,7 @@ class my_pooling(nn.Module):
         torch.save(self.state_dict(), os.path.join(output_path, "pytorch_model.bin"))
 
 
-    @staticmethod
-    def load(input_path: str):
+    def load(self, input_path: str):
         weights = torch.load(os.path.join(input_path, "pytorch_model.bin"), map_location=torch.device("cpu"))
-        model = my_pooling()
-        model.load_state_dict(weights)
-        return model
+        self.load_state_dict(weights)
+        pass
