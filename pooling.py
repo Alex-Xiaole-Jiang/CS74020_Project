@@ -26,7 +26,7 @@ class SwiGLU(nn.Module):
     '''
     Basically SwiGLU from ChatGPT, looks correct
     '''
-    def __init__(self, input_dim, hidden_dim, output_dim, use_layernorm = False):
+    def __init__(self, input_dim, hidden_dim, output_dim, use_layernorm = True):
         super().__init__()
         self.fc1 = nn.Linear(input_dim, hidden_dim)
         self.fc2 = nn.Linear(input_dim, hidden_dim)
@@ -144,20 +144,12 @@ class my_pooling(nn.Module):
 
 
     def save(self, output_path: str):
-        with open(os.path.join(output_path, "my_pooling_config.json"), "w") as fOut:
-            json.dump(self.get_config_dict(), fOut, indent=2)
-
         torch.save(self.state_dict(), os.path.join(output_path, "pytorch_model.bin"))
 
-    def get_config_dict(self):
-        return {key: self.__dict__[key] for key in self.config_keys}
 
     @staticmethod
     def load(input_path: str):
-        with open(os.path.join(input_path, "my_pooling_config.json"), "r") as fIn:
-            config = json.load(fIn)
-
         weights = torch.load(os.path.join(input_path, "pytorch_model.bin"), map_location=torch.device("cpu"))
-        model = my_pooling(**config)
+        model = my_pooling()
         model.load_state_dict(weights)
         return model

@@ -1,2 +1,7 @@
 *.pyc
 *.csv
+*.json
+*.txt
+*.bin
+*.safetensors
+*.md
