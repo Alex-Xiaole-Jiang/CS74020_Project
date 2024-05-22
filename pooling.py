@@ -149,6 +149,6 @@ class my_pooling(nn.Module):
 
 
     def load(self, input_path: str):
-        weights = torch.load(os.path.join(input_path, "pytorch_model.bin"), map_location=torch.device("cpu"))
+        weights = torch.load(os.path.join(input_path, "1_my_pooling/pytorch_model.bin"), map_location=torch.device("cpu"))
         self.load_state_dict(weights)
         pass
